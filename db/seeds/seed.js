@@ -6,5 +6,24 @@ const {
 } = require('../data/index.js');
 
 exports.seed = function (knex) {
+  return knex.migrate
+    .rollback()
+    .then(() => {
+      return knex.migrate.latest();
+    })
+    .then(() => {
+      return knex('topics')
+        .insert(topicData)
+        .returning('*')
+        .then(() => {
+          return knex('users')
+            .insert(userData)
+            .returning('*')
+            .then((users) => {
+              console.log(users, '<<<');
+            });
+        });
+    });
+
   // add seeding functionality here
 };
