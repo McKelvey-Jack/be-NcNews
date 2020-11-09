@@ -1,21 +1,35 @@
 // extract any functions you are using to manipulate your data, into this file
 
-const { articlesData } = require("../data/development-data");
-
 // pure function
 
-const articlesFormatter = (articledata) => {
-   
-    return articledata.map((article) => {
-        const newArticle = {...article}
+const timeStampFormatter = (data) => {
+  return data.map((object) => {
+    const newObject = { ...object };
 
-        newArticle.created_at = new Date(article["created_at"]).toLocaleDateString('en-GB')
+    newObject.created_at = new Date(object['created_at']);
 
-        return newArticle;
-    })
+    return newObject;
+  });
+};
 
-      }
-    
+const createIdRef = (rows) => {
+  const ref = {};
 
-module.exports = {articlesFormatter}
+  rows.forEach((row) => {
+    ref[row.title] = row.article_id;
+  });
+  return ref;
+};
 
+const commentformatter = (commentData, articleRef) => {
+  return commentData.map(({ belongs_to, created_by, ...restOfComment }) => {
+    const newComment = {
+      article_id: articleRef[belongs_to],
+      author: created_by,
+      ...restOfComment,
+    };
+    return newComment;
+  });
+};
+
+module.exports = { timeStampFormatter, createIdRef, commentformatter };

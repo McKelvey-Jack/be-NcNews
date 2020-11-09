@@ -7,6 +7,7 @@ exports.up = function (knex) {
     commentTable.integer('article_id').references('articles.article_id');
     commentTable.integer('votes').defaultTo(0);
     commentTable.text('body').notNullable();
+    commentTable.timestamp('created_at').defaultTo(knex.fn.now());
   });
 };
 

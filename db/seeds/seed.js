@@ -4,7 +4,11 @@ const {
   commentData,
   usersData,
 } = require('../data/index.js');
-const {articlesFormatter} = require('../utils/data-manipulation')
+const {
+  timeStampFormatter,
+  createIdRef,
+  commentformatter,
+} = require('../utils/data-manipulation');
 
 exports.seed = function (knex) {
   return knex.migrate
@@ -13,19 +17,28 @@ exports.seed = function (knex) {
       return knex.migrate.latest();
     })
     .then(() => {
-      return knex.insert(topicData).into('topics').returning('*')
+      return knex.insert(topicData).into('topics').returning('*');
     })
     .then(() => {
-      return knex.insert(usersData).into('users').returning('*')
+      return knex.insert(usersData).into('users').returning('*');
     })
-    .then((users) => {
-       const formattedArticles = articlesFormatter(articlesData)
-      return knex.insert(formattedArticles).into('articles').returning('*')
+    .then(() => {
+      const formattedArticles = timeStampFormatter(articlesData);
+      return knex.insert(formattedArticles).into('articles').returning('*');
     })
-
-
-    
-   
+    .then((articles) => {
+      const idRef = createIdRef(articles);
+      const commentsWithTimeStamp = timeStampFormatter(commentData);
+      const formattedComments = commentformatter(commentsWithTimeStamp, idRef);
+      console.log(formattedComments);
+      return knex
+        .insert(formattedComments)
+        .into('comments')
+        .returning('*')
+        .then((comments) => {
+          console.log(comments, '<<<');
+        });
+    });
 
   // add seeding functionality here
 };
