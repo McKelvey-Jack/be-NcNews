@@ -1,9 +1,10 @@
 const {
   topicData,
-  articleData,
+  articlesData,
   commentData,
-  userData,
+  usersData,
 } = require('../data/index.js');
+const {articlesFormatter} = require('../utils/data-manipulation')
 
 exports.seed = function (knex) {
   return knex.migrate
@@ -12,18 +13,19 @@ exports.seed = function (knex) {
       return knex.migrate.latest();
     })
     .then(() => {
-      return knex('topics')
-        .insert(topicData)
-        .returning('*')
-        .then(() => {
-          return knex('users')
-            .insert(userData)
-            .returning('*')
-            .then((users) => {
-              console.log(users, '<<<');
-            });
-        });
-    });
+      return knex.insert(topicData).into('topics').returning('*')
+    })
+    .then(() => {
+      return knex.insert(usersData).into('users').returning('*')
+    })
+    .then((users) => {
+       const formattedArticles = articlesFormatter(articlesData)
+      return knex.insert(formattedArticles).into('articles').returning('*')
+    })
+
+
+    
+   
 
   // add seeding functionality here
 };
