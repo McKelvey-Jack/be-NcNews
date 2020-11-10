@@ -6,8 +6,8 @@ const {
 } = require('../data/index.js');
 const {
   timeStampFormatter,
-  createIdRef,
-  commentformatter,
+  createRefObject,
+  commentFormatter,
 } = require('../utils/data-manipulation');
 
 exports.seed = function (knex) {
@@ -27,17 +27,10 @@ exports.seed = function (knex) {
       return knex.insert(formattedArticles).into('articles').returning('*');
     })
     .then((articles) => {
-      const idRef = createIdRef(articles);
+      const idRef = createRefObject(articles, 'title', 'article_id');
       const commentsWithTimeStamp = timeStampFormatter(commentData);
-      const formattedComments = commentformatter(commentsWithTimeStamp, idRef);
-      console.log(formattedComments);
-      return knex
-        .insert(formattedComments)
-        .into('comments')
-        .returning('*')
-        .then((comments) => {
-          console.log(comments, '<<<');
-        });
+      const formattedComments = commentFormatter(commentsWithTimeStamp, idRef);
+      return knex.insert(formattedComments).into('comments').returning('*');
     });
 
   // add seeding functionality here

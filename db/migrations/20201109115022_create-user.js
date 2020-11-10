@@ -1,5 +1,5 @@
 exports.up = function (knex) {
-  console.log('creating users table...');
+  //console.log('creating users table...');
 
   return knex.schema.createTable('users', (userTable) => {
     userTable.text('username').unique().primary().notNullable();

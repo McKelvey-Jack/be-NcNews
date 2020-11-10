@@ -12,16 +12,16 @@ const timeStampFormatter = (data) => {
   });
 };
 
-const createIdRef = (rows) => {
+const createRefObject = (rows, nameKey, idKey) => {
   const ref = {};
 
   rows.forEach((row) => {
-    ref[row.title] = row.article_id;
+    ref[row[nameKey]] = row[idKey];
   });
   return ref;
 };
 
-const commentformatter = (commentData, articleRef) => {
+const commentFormatter = (commentData, articleRef) => {
   return commentData.map(({ belongs_to, created_by, ...restOfComment }) => {
     const newComment = {
       article_id: articleRef[belongs_to],
@@ -32,4 +32,4 @@ const commentformatter = (commentData, articleRef) => {
   });
 };
 
-module.exports = { timeStampFormatter, createIdRef, commentformatter };
+module.exports = { timeStampFormatter, createRefObject, commentFormatter };
