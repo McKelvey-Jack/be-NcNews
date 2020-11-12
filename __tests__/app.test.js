@@ -65,7 +65,7 @@ describe('API', () => {
           expect(res.body.articles[0]).toHaveProperty('author');
         });
     });
-    test('GET - 200 - responds articles that have a count of their comments in a comment_count prop', () => {
+    test('GET - 200 - responds with articles that have a count of their comments in a comment_count prop', () => {
       return request(app)
         .get('/api/articles')
         .expect(200)
@@ -75,7 +75,7 @@ describe('API', () => {
           expect(res.body.articles[1].comment_count).toBe('0');
         });
     });
-    test.only('GET - 200 - responds with the articles sorted and ordered  by given query', () => {
+    test('GET - 200 - responds with the articles sorted and ordered by given query', () => {
       return request(app)
         .get('/api/articles?sort_by=votes&order=desc')
         .expect(200)
@@ -83,12 +83,114 @@ describe('API', () => {
           expect(res.body.articles[0].votes).toBe(100);
         });
     });
+    test('GET - 200 - sort query will default to created_at & desc if ', () => {
+      return request(app)
+        .get('/api/articles?sor=votes&ord=desc')
+        .expect(200)
+        .then((res) => {
+          expect(res.body.articles[0].created_at).toBe(
+            '2018-11-15T12:21:54.171Z'
+          );
+          expect(res.body.articles[1].created_at).toBe(
+            '2014-11-16T12:21:54.171Z'
+          );
+        });
+    });
+    test('GET - 400 - if invalid sortBy row ', () => {
+      return request(app)
+        .get('/api/articles?sort_by=hello')
+        .expect(400)
+        .then((res) => {
+          expect(res.body.msg).toBe('Bad Request');
+        });
+    });
+
     test('GET - 200 - responds with articles filtered by a query', () => {
       return request(app)
         .get('/api/articles?author=rogersop')
         .expect(200)
         .then((res) => {
           expect(res.body.articles.length).toBe(3);
+          return request(app)
+            .get('/api/articles?topic=mitch')
+            .expect(200)
+            .then((res) => {
+              expect(res.body.articles.length).toBe(11);
+            });
+        });
+    });
+    test('GET - 200 - will work with multiple queries', () => {
+      return request(app)
+        .get('/api/articles?author=rogersop&sort_by=votes&order=asc')
+        .expect(200)
+        .then((res) => {
+          expect(res.body.articles[0].created_at).toBe(
+            '2006-11-18T12:21:54.171Z'
+          );
+        });
+    });
+    test('GET - 404 - author doesnt exist', () => {
+      return request(app)
+        .get('/api/articles?author=notopic')
+        .expect(404)
+        .then((res) => {
+          expect(res.body.msg).toEqual('Not Found');
+        });
+    });
+    test('GET - 404 - topic doesnt exist', () => {
+      return request(app)
+        .get('/api/articles?topic=notopic')
+        .expect(404)
+        .then((res) => {
+          expect(res.body.msg).toEqual('Not Found');
+        });
+    });
+    test('GET - 200 - ignores invalid query', () => {
+      return request(app)
+        .get('/api/articles?notopic=notopic')
+        .expect(200)
+        .then((res) => {
+          expect(res.body.articles).toEqual(expect.any(Array));
+        });
+    });
+    test('GET - 200 - if topic/author does exist but with no articles', () => {
+      return request(app)
+        .get('/api/articles?author=lurker')
+        .expect(200)
+        .then((res) => {
+          expect(res.body.articles).toEqual([]);
+        });
+    });
+
+    test('POST 201 - will post a new article', () => {
+      return request(app)
+        .post('/api/articles')
+        .send({
+          title: 'hello world',
+          body: 'its a long way to the top if you want to rock and roll',
+          author: 'butter_bridge',
+          topic: 'mitch',
+        })
+        .expect(201)
+        .then((res) => {
+          console.log(res.body);
+          expect(typeof res.body.article).toEqual('object');
+          expect(res.body.article).toHaveProperty('author');
+          expect(res.body.article).toHaveProperty('topic');
+        });
+    });
+    test('POST 400 - will if the format is incorrect', () => {
+      return request(app)
+        .post('/api/articles')
+        .send({
+          badformat: 'hello world',
+          body: 'its a long way to the top if you want to rock and roll',
+          author: 'butter_bridge',
+          topic: 'mitch',
+        })
+        .expect(400)
+        .then((res) => {
+          expect(res.body.msg).toBe('Bad Request');
         });
     });
 
@@ -100,6 +202,7 @@ describe('API', () => {
           .then((res) => {
             expect(typeof res.body.article).toEqual('object');
             expect(res.body.article).toHaveProperty('article_id');
+            expect(res.body.article.article_id).toBe(1);
           });
       });
       test('GET - 200 - responds with article that has a count of its comments in a comment_count prop', () => {
@@ -133,7 +236,23 @@ describe('API', () => {
           .send({ inc_votes: 50 })
           .expect(404)
           .then((res) => {
-            expect(res.body.msg).toBe('article not found');
+            expect(res.body.msg).toBe('No Article Found');
+          });
+      });
+      test('PATCH - 400 - if format of body is incorrect', () => {
+        return request(app)
+          .patch('/api/articles/500')
+          .send({ inc_vot: 50 })
+          .expect(400)
+          .then((res) => {
+            expect(res.body.msg).toBe('Bad Request');
+            return request(app)
+              .patch('/api/articles/500')
+              .send({ inc_votes: 'hello' })
+              .expect(400)
+              .then((res) => {
+                expect(res.body.msg).toBe('Bad Request');
+              });
           });
       });
       test('DELETE - 204 - will delete article at given id', () => {
@@ -192,6 +311,15 @@ describe('API', () => {
             expect(res.body.msg).toBe('Bad Request');
           });
       });
+      test('POST - 400 - if the input format is invalid', () => {
+        return request(app)
+          .post('/api/articles/1/comments')
+          .send({ userame: 'nouser', boy: 'this is great!!' })
+          .expect(400)
+          .then((res) => {
+            expect(res.body.msg).toBe('Bad Request');
+          });
+      });
       test('POST - 400 - if the username does not exist', () => {
         return request(app)
           .post('/api/articles/1/comments')
@@ -201,6 +329,7 @@ describe('API', () => {
             expect(res.body.msg).toBe('Bad Request');
           });
       });
+
       test('GET - 200 - responds with all the comments of a given article', () => {
         return request(app)
           .get('/api/articles/1/comments')
@@ -221,6 +350,81 @@ describe('API', () => {
             expect(res.body.comments[1].votes).toBe(16);
           });
       });
+      test('GET - 200 - will default to created_at & desc ', () => {
+        return request(app)
+          .get('/api/articles/1/comments')
+          .expect(200)
+          .then((res) => {
+            expect(res.body.comments[0].created_at).toBe(
+              '2016-11-22T12:36:03.389Z'
+            );
+            expect(res.body.comments[1].created_at).toBe(
+              '2015-11-23T12:36:03.389Z'
+            );
+            expect(res.body.comments[2].created_at).toBe(
+              '2014-11-23T12:36:03.389Z'
+            );
+          });
+      });
+
+      test('GET - 400 - invalid sortby row', () => {
+        return request(app)
+          .get('/api/articles/1/comments?sort_by=hello')
+          .expect(400)
+          .then((res) => {
+            console.log(res.body);
+            expect(res.body.msg).toBe('Bad Request');
+          });
+      });
+      test('GET - 404 - if no article at id', () => {
+        return request(app)
+          .get('/api/articles/1000/comments')
+          .expect(404)
+          .then((res) => {
+            console.log(res.body);
+            expect(res.body.msg).toBe('Not Found');
+          });
+      });
+      test('PATCH -  200 - will update a comment at given id', () => {
+        return request(app)
+          .patch('api/comments/1')
+          .send({ inc_votes: 10 })
+          .expect(200)
+          .then((res) => {
+            console.log(res.body);
+            expect(res.body.comments).toBe(100);
+          });
+      });
+    });
+  });
+  describe('API/COMMENTS', () => {
+    test('PATCH -  200 - will update a comment at given id', () => {
+      return request(app)
+        .patch('/api/comments/1')
+        .send({ inc_votes: 10 })
+        .expect(200)
+        .then((res) => {
+          console.log(res.body);
+          expect(res.body.comment.votes).toBe(26);
+        });
+    });
+    test.only('PATCH - 404 - if no comment if found', () => {
+      return request(app)
+        .patch('/api/comments/1000')
+        .send({ inc_votes: 10 })
+        .expect(404)
+        .then((res) => {
+          expect(res.body.msg).toBe('Not Found');
+        });
+    });
+    test.only('PATCH - 400 - if format of body is invalid', () => {
+      return request(app)
+        .patch('/api/comments/1000')
+        .send({ inc_votes: 'one' })
+        .expect(400)
+        .then((res) => {
+          expect(res.body.msg).toBe('Bad Request');
+        });
     });
   });
 });

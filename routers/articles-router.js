@@ -5,10 +5,11 @@ const {
   getCommentsByArticleId,
   deleteArticleById,
   getAllArticles,
+  postNewArticle,
 } = require('../controllers/articles');
 const articlesRouter = require('express').Router();
 
-articlesRouter.route('/').get(getAllArticles);
+articlesRouter.route('/').get(getAllArticles).post(postNewArticle);
 
 articlesRouter
   .route('/:article_id')

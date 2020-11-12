@@ -5,6 +5,9 @@ const {
   fetchCommentsByArticleId,
   removeArticleById,
   fetchAllArticles,
+  addNewArticle,
+  checkAuthorExists,
+  checkTopicExists,
 } = require('../models/articles');
 const articlesRouter = require('../routers/articles-router');
 
@@ -26,7 +29,9 @@ const patchArticleById = (req, res, next) => {
     .then((article) => {
       res.status(200).send({ article });
     })
-    .catch(next);
+    .catch((err) => {
+      next(err);
+    });
 };
 
 const postNewComment = (req, res, next) => {
@@ -60,19 +65,39 @@ const deleteArticleById = (req, res, next) => {
 };
 
 const getAllArticles = (req, res, next) => {
-  //const { sortBy, order, author, topic } = req.query;
   const sortBy = req.query.sort_by;
   const order = req.query.order;
   const author = req.query.author;
   const topic = req.query.topic;
-  console.log(req.query);
-  console.log(sortBy);
-  console.log(author);
-  console.log(topic);
 
-  fetchAllArticles(sortBy, order, author, topic).then((articles) => {
-    res.status(200).send({ articles });
-  });
+  fetchAllArticles(sortBy, order, author, topic)
+    .then((articles) => {
+      if (articles.length === 0) {
+        return Promise.all([
+          articles,
+          checkAuthorExists(author),
+          checkTopicExists(topic),
+        ]);
+      }
+      return [articles];
+    })
+    .then(([articles, doesAuthorExist, doesTopicExist]) => {
+      if (doesAuthorExist === false || doesTopicExist === false) {
+        res.status(404).send({ msg: 'Not Found' });
+      } else {
+        res.status(200).send({ articles });
+      }
+    })
+    .catch(next);
+};
+
+const postNewArticle = (req, res, next) => {
+  const newArticle = req.body;
+  addNewArticle(newArticle)
+    .then((article) => {
+      res.status(201).send({ article });
+    })
+    .catch(next);
 };
 
 module.exports = {
@@ -82,4 +107,5 @@ module.exports = {
   getCommentsByArticleId,
   deleteArticleById,
   getAllArticles,
+  postNewArticle,
 };

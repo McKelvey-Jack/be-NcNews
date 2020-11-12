@@ -20,13 +20,16 @@ const fetchArticleById = (articleid) => {
 };
 
 const updateArticleVotes = (articleId, voteCount) => {
+  if (typeof voteCount !== 'number') {
+    return Promise.reject({ status: 400, msg: 'Bad Request' });
+  }
   return connection('articles')
     .where('article_id', '=', articleId)
     .increment('votes', voteCount)
     .returning('*')
     .then((updatedArticle) => {
       if (updatedArticle.length === 0) {
-        return Promise.reject({ status: 404, msg: 'article not found' });
+        return Promise.reject({ status: 404, msg: 'No Article Found' });
       } else {
         return updatedArticle[0];
       }
@@ -67,11 +70,17 @@ const addNewComment = (articleId, commentInfo) => {
 };
 
 const fetchCommentsByArticleId = (articleId, sortBy, order) => {
-  return connection('comments')
-    .select('*')
-    .where('article_id', '=', articleId)
-    .orderBy(sortBy || 'created_at', order || 'desc')
-    .returning('*');
+  return checkArticleExists(articleId).then((boolean) => {
+    if (boolean === false) {
+      return Promise.reject({ status: 404, msg: 'Not Found' });
+    } else {
+      return connection('comments')
+        .select('*')
+        .where('article_id', '=', articleId)
+        .orderBy(sortBy || 'created_at', order || 'desc')
+        .returning('*');
+    }
+  });
 };
 
 const fetchAllArticles = (sortBy, order, author, topic) => {
@@ -92,11 +101,56 @@ const fetchAllArticles = (sortBy, order, author, topic) => {
       }
     })
     .then((articles) => {
-      if (articles.length === 0) {
-        return Promise.reject({ status: 404, msg: 'article not found' });
-      } else {
-        return articles;
+      return articles;
+    });
+};
+
+const addNewArticle = (newArticle) => {
+  return connection('articles')
+    .insert(newArticle)
+    .returning('*')
+    .then((articles) => {
+      return articles[0];
+    });
+};
+
+const checkAuthorExists = (author) => {
+  if (author === undefined) return Promise.resolve(undefined);
+
+  return connection('users')
+    .select('*')
+    .where('username', author)
+    .then((authors) => {
+      if (authors.length === 0) {
+        return false;
       }
+      return true;
+    });
+};
+
+const checkTopicExists = (topic) => {
+  if (topic === undefined) return Promise.resolve(undefined);
+
+  return connection('topics')
+    .select('*')
+    .where('slug', topic)
+    .then((topics) => {
+      if (topics.length === 0) {
+        return false;
+      }
+      return true;
+    });
+};
+
+const checkArticleExists = (id) => {
+  return connection('articles')
+    .select('*')
+    .where('article_id', id)
+    .then((articles) => {
+      if (articles.length === 0) {
+        return false;
+      }
+      return true;
     });
 };
 
@@ -107,4 +161,7 @@ module.exports = {
   fetchCommentsByArticleId,
   removeArticleById,
   fetchAllArticles,
+  addNewArticle,
+  checkAuthorExists,
+  checkTopicExists,
 };
