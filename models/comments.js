@@ -16,4 +16,20 @@ const updateCommentVotes = (commentId, updateAmount) => {
     });
 };
 
-module.exports = { updateCommentVotes };
+const removeCommentById = (commentId) => {
+  return connection('comments')
+    .where('comment_id', commentId)
+    .del()
+    .then((res) => {
+      if (res === 0) {
+        return Promise.reject({
+          status: 400,
+          msg: `no comment with id of ${commentId}`,
+        });
+      } else {
+        return;
+      }
+    });
+};
+
+module.exports = { updateCommentVotes, removeCommentById };

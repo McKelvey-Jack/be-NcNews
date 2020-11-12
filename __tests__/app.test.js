@@ -173,7 +173,6 @@ describe('API', () => {
         })
         .expect(201)
         .then((res) => {
-          console.log(res.body);
           expect(typeof res.body.article).toEqual('object');
           expect(res.body.article).toHaveProperty('author');
           expect(res.body.article).toHaveProperty('topic');
@@ -239,20 +238,22 @@ describe('API', () => {
             expect(res.body.msg).toBe('No Article Found');
           });
       });
-      test('PATCH - 400 - if format of body is incorrect', () => {
+      test('PATCH - 400 - if non numerical value is passed as inc value', () => {
         return request(app)
           .patch('/api/articles/500')
-          .send({ inc_vot: 50 })
+          .send({ inc_votes: '1' })
           .expect(400)
           .then((res) => {
             expect(res.body.msg).toBe('Bad Request');
-            return request(app)
-              .patch('/api/articles/500')
-              .send({ inc_votes: 'hello' })
-              .expect(400)
-              .then((res) => {
-                expect(res.body.msg).toBe('Bad Request');
-              });
+          });
+      });
+      test('PATCH - 400 - if format of body if invalid', () => {
+        return request(app)
+          .patch('/api/articles/500')
+          .send({ inc_v: 50 })
+          .expect(400)
+          .then((res) => {
+            expect(res.body.msg).toBe('Bad Request');
           });
       });
       test('DELETE - 204 - will delete article at given id', () => {
@@ -336,8 +337,7 @@ describe('API', () => {
           .expect(200)
           .then((res) => {
             expect(res.body.comments).toEqual(expect.any(Array));
-            expect(res.body.comments[0]).toHaveProperty('comment_id');
-            expect(res.body.comments[0]).toHaveProperty('votes');
+            expect(res.body.comments[0].article_id).toBe(1);
           });
       });
       test('GET - 200 - responds with the comments sorted by a given query', () => {
@@ -372,7 +372,6 @@ describe('API', () => {
           .get('/api/articles/1/comments?sort_by=hello')
           .expect(400)
           .then((res) => {
-            console.log(res.body);
             expect(res.body.msg).toBe('Bad Request');
           });
       });
@@ -381,18 +380,7 @@ describe('API', () => {
           .get('/api/articles/1000/comments')
           .expect(404)
           .then((res) => {
-            console.log(res.body);
             expect(res.body.msg).toBe('Not Found');
-          });
-      });
-      test('PATCH -  200 - will update a comment at given id', () => {
-        return request(app)
-          .patch('api/comments/1')
-          .send({ inc_votes: 10 })
-          .expect(200)
-          .then((res) => {
-            console.log(res.body);
-            expect(res.body.comments).toBe(100);
           });
       });
     });
@@ -404,11 +392,10 @@ describe('API', () => {
         .send({ inc_votes: 10 })
         .expect(200)
         .then((res) => {
-          console.log(res.body);
           expect(res.body.comment.votes).toBe(26);
         });
     });
-    test.only('PATCH - 404 - if no comment if found', () => {
+    test('PATCH - 404 - if no comment if found', () => {
       return request(app)
         .patch('/api/comments/1000')
         .send({ inc_votes: 10 })
@@ -417,13 +404,43 @@ describe('API', () => {
           expect(res.body.msg).toBe('Not Found');
         });
     });
-    test.only('PATCH - 400 - if format of body is invalid', () => {
+    test('PATCH - 400 - if non numerical value is passed', () => {
       return request(app)
         .patch('/api/comments/1000')
         .send({ inc_votes: 'one' })
         .expect(400)
         .then((res) => {
           expect(res.body.msg).toBe('Bad Request');
+        });
+    });
+    test('PATCH - 400 - if key of body is wrong', () => {
+      return request(app)
+        .patch('/api/comments/1000')
+        .send({ inc_vs: 10 })
+        .expect(400)
+        .then((res) => {
+          expect(res.body.msg).toBe('Bad Request');
+        });
+    });
+    test('DELETE - 204 - will delete comment comment with given id', () => {
+      return request(app)
+        .delete('/api/comments/1')
+        .expect(204)
+        .then((res) => {
+          return connection('comments')
+            .select('*')
+            .returning('*')
+            .then((comments) => {
+              expect(comments.length).toBe(17);
+            });
+        });
+    });
+    test('DELETE - 400 - will delete comment comment with given id', () => {
+      return request(app)
+        .delete('/api/comments/1000')
+        .expect(400)
+        .then((res) => {
+          expect(res.body.msg).toBe('no comment with id of 1000');
         });
     });
   });
