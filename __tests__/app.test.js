@@ -50,13 +50,14 @@ describe('API', () => {
     });
   });
   describe('API/USERS', () => {
-    test('GET - 200 - will return all users with a count of their articles', () => {
+    test.only('GET - 200 - will return all users with a count of their articles & comments', () => {
       return request(app)
         .get('/api/users')
         .expect(200)
         .then((res) => {
           expect(res.body.users).toEqual(expect.any(Array));
           expect(res.body.users[0].articles_count).toBe('3');
+          expect(res.body.users[0].comment_count).toBe('5');
         });
     });
     test('GET - 200 - will sort and order users by a given query', () => {
@@ -250,7 +251,7 @@ describe('API', () => {
         });
     });
 
-    test('POST 201 - will post a new article', () => {
+    test('POST - 201 - will post a new article', () => {
       return request(app)
         .post('/api/articles')
         .send({
@@ -266,7 +267,7 @@ describe('API', () => {
           expect(res.body.article).toHaveProperty('topic');
         });
     });
-    test('POST 400 -  if the format of post is incorrect', () => {
+    test('POST - 400 -  if the format of post is incorrect', () => {
       return request(app)
         .post('/api/articles')
         .send({
@@ -393,7 +394,7 @@ describe('API', () => {
       });
       test('POST - 400 - if the article does not exist', () => {
         return request(app)
-          .post('/api/articles/300/comments')
+          .post('/api/articles/50/comments')
           .send({ username: 'rogersop', body: 'this is great!!' })
           .expect(400)
           .then((res) => {

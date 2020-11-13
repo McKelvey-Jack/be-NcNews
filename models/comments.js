@@ -5,7 +5,7 @@ const updateCommentVotes = (commentId, updateAmount) => {
   }
   return connection('comments')
     .where('comment_id', commentId)
-    .increment('votes', updateAmount)
+    .increment('votes', updateAmount || 0)
     .returning('*')
     .then((comments) => {
       if (comments.length === 0) {

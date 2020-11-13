@@ -1,7 +1,8 @@
 const {
   fetchUserByUsername,
   addNewUser,
-  fetchAllUsers,
+  fetchAllUsersWithArticleCount,
+  fetchAllUsersWithCommentCount,
 } = require('../models/users');
 
 const getUserByUsername = (req, res, next) => {
@@ -27,9 +28,18 @@ const postNewUser = (req, res, next) => {
 const getAllUsers = (req, res, next) => {
   const sortBy = req.query.sort_by;
   const order = req.query.order;
-  fetchAllUsers(sortBy, order)
-    .then((users) => {
-      res.status(200).send({ users });
+
+  const promises = [
+    fetchAllUsersWithArticleCount(sortBy, order),
+    fetchAllUsersWithCommentCount(sortBy, order),
+  ];
+
+  return Promise.all(promises)
+    .then(([userWithArticleCount, userWithCommentCount]) => {
+      userWithArticleCount.forEach((user, index) => {
+        user.comment_count = userWithCommentCount[index].comment_count;
+      });
+      res.status(200).send({ users: userWithArticleCount });
     })
     .catch(next);
 };

@@ -6,7 +6,7 @@ const fetchArticleById = (articleid) => {
     .select('articles.*')
     .from('articles')
     .where('articles.article_id', '=', articleid)
-    .join('comments', 'comments.article_id', '=', 'articles.article_id')
+    .leftJoin('comments', 'comments.article_id', '=', 'articles.article_id')
     .count('comment_id AS comment_count')
     .returning('*')
     .groupBy('articles.article_id')
@@ -25,7 +25,7 @@ const updateArticleVotes = (articleId, voteCount) => {
   }
   return connection('articles')
     .where('article_id', '=', articleId)
-    .increment('votes', voteCount)
+    .increment('votes', voteCount || 0)
     .returning('*')
     .then((updatedArticle) => {
       if (updatedArticle.length === 0) {
@@ -61,6 +61,7 @@ const addNewComment = (articleId, commentInfo) => {
   commentInfo.article_id = articleId;
   commentInfo.author = commentInfo.username;
   delete commentInfo.username;
+
   return connection('comments')
     .insert(commentInfo)
     .returning('*')

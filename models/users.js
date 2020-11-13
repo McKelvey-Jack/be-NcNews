@@ -25,21 +25,37 @@ const addNewUser = (newUserInfo) => {
     });
 };
 
-const fetchAllUsers = (sortBy, order) => {
-  return (
-    connection('users')
-      .select('users.*')
-      .leftJoin('articles', 'articles.author', '=', 'users.username')
-      //.leftJoin('comments', 'comments.author', '=', 'users.username')
-      .count('articles.author AS articles_count')
-      //.count('articles.author AS article_count')
-      .returning('*')
-      .groupBy('users.username')
-      .orderBy(sortBy || 'username', order || 'asc')
-      .then((users) => {
-        return users;
-      })
-  );
+const fetchAllUsersWithArticleCount = (sortBy, order) => {
+  return connection('users')
+    .select('users.*')
+    .leftJoin('articles', 'articles.author', '=', 'users.username')
+
+    .count('articles.author AS articles_count')
+
+    .returning('*')
+    .groupBy('users.username')
+    .orderBy(sortBy || 'username', order || 'asc')
+    .then((users) => {
+      return users;
+    });
 };
 
-module.exports = { fetchUserByUsername, addNewUser, fetchAllUsers };
+const fetchAllUsersWithCommentCount = (sortBy, order) => {
+  return connection('users')
+    .select('users.*')
+    .leftJoin('comments', 'comments.author', '=', 'users.username')
+    .count('comments.author AS comment_count')
+    .returning('*')
+    .groupBy('users.username')
+    .orderBy(sortBy || 'username', order || 'asc')
+    .then((users) => {
+      return users;
+    });
+};
+
+module.exports = {
+  fetchUserByUsername,
+  addNewUser,
+  fetchAllUsersWithArticleCount,
+  fetchAllUsersWithCommentCount,
+};
