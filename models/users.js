@@ -1,3 +1,4 @@
+const { leftJoin } = require('../connection');
 const connection = require('../connection');
 
 const fetchUserByUsername = (username) => {
@@ -24,4 +25,21 @@ const addNewUser = (newUserInfo) => {
     });
 };
 
-module.exports = { fetchUserByUsername, addNewUser };
+const fetchAllUsers = (sortBy, order) => {
+  return (
+    connection('users')
+      .select('users.*')
+      .leftJoin('articles', 'articles.author', '=', 'users.username')
+      //.leftJoin('comments', 'comments.author', '=', 'users.username')
+      .count('articles.author AS articles_count')
+      //.count('articles.author AS article_count')
+      .returning('*')
+      .groupBy('users.username')
+      .orderBy(sortBy || 'username', order || 'asc')
+      .then((users) => {
+        return users;
+      })
+  );
+};
+
+module.exports = { fetchUserByUsername, addNewUser, fetchAllUsers };

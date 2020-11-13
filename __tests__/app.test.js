@@ -21,7 +21,7 @@ describe('API', () => {
   });
 
   describe('API/TOPICS', () => {
-    it('GET - 200 - will return all topics', () => {
+    test('GET - 200 - will return all topics', () => {
       return request(app)
         .get('/api/topics')
         .expect(200)
@@ -29,8 +29,70 @@ describe('API', () => {
           expect(res.body.topics).toEqual(expect.any(Array));
         });
     });
+    test('POST 201 - will post a new topic', () => {
+      return request(app)
+        .post('/api/topics')
+        .send({ slug: 'Football', description: 'The Beautiful Game' })
+        .expect(201)
+        .then((res) => {
+          expect(res.body.topic.slug).toBe('Football');
+        });
+    });
+
+    test('POST 400 -  if format is invalid', () => {
+      return request(app)
+        .post('/api/topics')
+        .send({ invalidkey: 'Football', description: 'The Beautiful Game' })
+        .expect(400)
+        .then((res) => {
+          expect(res.body.msg).toBe('Bad Request');
+        });
+    });
   });
   describe('API/USERS', () => {
+    test('GET - 200 - will return all users with a count of their articles', () => {
+      return request(app)
+        .get('/api/users')
+        .expect(200)
+        .then((res) => {
+          expect(res.body.users).toEqual(expect.any(Array));
+          expect(res.body.users[0].articles_count).toBe('3');
+        });
+    });
+    test('GET - 200 - will sort and order users by a given query', () => {
+      return request(app)
+        .get('/api/users?sort_by=articles_count&order=desc')
+        .expect(200)
+        .then((res) => {
+          expect(res.body.users[0].username).toBe('icellusedkars');
+        });
+    });
+    test('GET - 200 - sort will default to username desc if no query', () => {
+      return request(app)
+        .get('/api/users')
+        .expect(200)
+        .then((res) => {
+          expect(res.body.users[0].username).toBe('butter_bridge');
+          expect(res.body.users[1].username).toBe('icellusedkars');
+        });
+    });
+    test('GET - 400 - if invalid sortby row', () => {
+      return request(app)
+        .get('/api/users?sort_by=hello')
+        .expect(400)
+        .then((res) => {
+          expect(res.body.msg).toBe('Bad Request');
+        });
+    });
+    test('GET - 200 - will ignore query if error in format/spelling of query type ', () => {
+      return request(app)
+        .get('/api/users?sor=name')
+        .expect(200)
+        .then((res) => {
+          expect(res.body.users).toEqual(expect.any(Array));
+        });
+    });
+
     test('GET - 200 - will return object for given username', () => {
       return request(app)
         .get('/api/users/rogersop')
@@ -73,7 +135,6 @@ describe('API', () => {
         });
     });
   });
-
   describe('API/ARTICLES', () => {
     test('GET - 200 - responds with all articles', () => {
       return request(app)
@@ -123,6 +184,14 @@ describe('API', () => {
           expect(res.body.msg).toBe('Bad Request');
         });
     });
+    test('GET - 200 - ignores query if error in format/spelling of soryby/order keys ', () => {
+      return request(app)
+        .get('/api/articles?sot_by=rogersop')
+        .expect(200)
+        .then((res) => {
+          expect(res.body.articles).toEqual(expect.any(Array));
+        });
+    });
 
     test('GET - 200 - responds with articles filtered by a query', () => {
       return request(app)
@@ -164,7 +233,7 @@ describe('API', () => {
           expect(res.body.msg).toEqual('Not Found');
         });
     });
-    test('GET - 200 - ignores invalid query', () => {
+    test('GET - 200 - ignores invalid filter query', () => {
       return request(app)
         .get('/api/articles?notopic=notopic')
         .expect(200)
@@ -394,6 +463,15 @@ describe('API', () => {
             expect(res.body.msg).toBe('Bad Request');
           });
       });
+      test('GET - 200 - ignores query if error in format/spelling of sortby/order', () => {
+        return request(app)
+          .get('/api/articles/1/comments?so_by=votes')
+          .expect(200)
+          .then((res) => {
+            expect(res.body.comments).toEqual(expect.any(Array));
+          });
+      });
+
       test('GET - 404 - if no article at id', () => {
         return request(app)
           .get('/api/articles/1000/comments')

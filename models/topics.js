@@ -4,4 +4,13 @@ const fetchAllTopics = () => {
   return connection.select('*').from('topics').returning('*');
 };
 
-module.exports = { fetchAllTopics };
+const addNewTopic = (newTopic) => {
+  return connection('topics')
+    .insert(newTopic)
+    .returning('*')
+    .then((topic) => {
+      return topic[0];
+    });
+};
+
+module.exports = { fetchAllTopics, addNewTopic };
