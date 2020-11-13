@@ -31,7 +31,7 @@ describe('API', () => {
     });
   });
   describe('API/USERS', () => {
-    it('GET - 200 - will return object for given username', () => {
+    test('GET - 200 - will return object for given username', () => {
       return request(app)
         .get('/api/users/rogersop')
         .expect(200)
@@ -46,7 +46,7 @@ describe('API', () => {
           });
         });
     });
-    it('GET - 404 - when no user at given username', () => {
+    test('GET - 404 - when no user at given username', () => {
       return request(app)
         .get('/api/users/nouserhere')
         .expect(404)
@@ -54,7 +54,26 @@ describe('API', () => {
           expect(res.body.msg).toEqual('no user found');
         });
     });
+    test('POST - 201 - will post a new user', () => {
+      return request(app)
+        .post('/api/users')
+        .send({ username: 'Stevo', name: 'Steve' })
+        .expect(201)
+        .then((res) => {
+          expect(res.body.user.name).toBe('Steve');
+        });
+    });
+    test('POST - 400 - if format is invalid', () => {
+      return request(app)
+        .post('/api/users')
+        .send({ invaldkey: 'Stevo', name: 'Steve' })
+        .expect(400)
+        .then((res) => {
+          expect(res.body.msg).toBe('Bad Request');
+        });
+    });
   });
+
   describe('API/ARTICLES', () => {
     test('GET - 200 - responds with all articles', () => {
       return request(app)
@@ -178,7 +197,7 @@ describe('API', () => {
           expect(res.body.article).toHaveProperty('topic');
         });
     });
-    test('POST 400 - will if the format is incorrect', () => {
+    test('POST 400 -  if the format of post is incorrect', () => {
       return request(app)
         .post('/api/articles')
         .send({

@@ -15,4 +15,13 @@ const fetchUserByUsername = (username) => {
     });
 };
 
-module.exports = { fetchUserByUsername };
+const addNewUser = (newUserInfo) => {
+  return connection('users')
+    .insert(newUserInfo)
+    .returning('*')
+    .then((newUser) => {
+      return newUser[0];
+    });
+};
+
+module.exports = { fetchUserByUsername, addNewUser };
