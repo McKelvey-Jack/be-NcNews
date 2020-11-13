@@ -11,7 +11,7 @@ describe('API', () => {
     return connection.destroy();
   });
 
-  test('will return 404 for invalid endpoint', () => {
+  test('404 - for invalid endpoint', () => {
     return request(app)
       .get('/api/hello')
       .expect(404)
@@ -48,9 +48,17 @@ describe('API', () => {
           expect(res.body.msg).toBe('Bad Request');
         });
     });
+    test('INVALID METHOD - 405 - if method is not allowed', () => {
+      return request(app)
+        .patch('/api/topics')
+        .expect(405)
+        .then((res) => {
+          expect(res.body.msg).toBe('Method Not Allowed');
+        });
+    });
   });
   describe('API/USERS', () => {
-    test.only('GET - 200 - will return all users with a count of their articles & comments', () => {
+    test('GET - 200 - will return all users with a count of their articles & comments', () => {
       return request(app)
         .get('/api/users')
         .expect(200)
@@ -62,7 +70,7 @@ describe('API', () => {
     });
     test('GET - 200 - will sort and order users by a given query', () => {
       return request(app)
-        .get('/api/users?sort_by=articles_count&order=desc')
+        .get('/api/users?sort_by=name&order=desc')
         .expect(200)
         .then((res) => {
           expect(res.body.users[0].username).toBe('icellusedkars');
@@ -133,6 +141,14 @@ describe('API', () => {
         .expect(400)
         .then((res) => {
           expect(res.body.msg).toBe('Bad Request');
+        });
+    });
+    test('INVALID METHOD - 405 - if method is not allowed', () => {
+      return request(app)
+        .put('/api/users')
+        .expect(405)
+        .then((res) => {
+          expect(res.body.msg).toBe('Method Not Allowed');
         });
     });
   });
@@ -482,6 +498,14 @@ describe('API', () => {
           });
       });
     });
+    test('INVALID METHOD - 405 - if method is not allowed', () => {
+      return request(app)
+        .put('/api/articles')
+        .expect(405)
+        .then((res) => {
+          expect(res.body.msg).toBe('Method Not Allowed');
+        });
+    });
   });
   describe('API/COMMENTS', () => {
     test('PATCH -  200 - will update a comment at given id', () => {
@@ -539,6 +563,14 @@ describe('API', () => {
         .expect(400)
         .then((res) => {
           expect(res.body.msg).toBe('no comment with id of 1000');
+        });
+    });
+    test('INVALID METHOD - 405 - if method is not allowed', () => {
+      return request(app)
+        .put('/api/comments/10')
+        .expect(405)
+        .then((res) => {
+          expect(res.body.msg).toBe('Method Not Allowed');
         });
     });
   });

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "setup-dbs": "psql -f ./db/setup.sql",
+    "find-logs": "grep -R --line-number console.log ./ --exclude-dir node_modules",
     "seed": "knex seed:run",
     "seed-test": "NODE_ENV=test knex seed:run",
     "test": "jest",

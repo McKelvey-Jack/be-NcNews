@@ -39,6 +39,7 @@ const getAllUsers = (req, res, next) => {
       userWithArticleCount.forEach((user, index) => {
         user.comment_count = userWithCommentCount[index].comment_count;
       });
+
       res.status(200).send({ users: userWithArticleCount });
     })
     .catch(next);

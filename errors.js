@@ -7,7 +7,7 @@ const customErrorHandler = (err, req, res, next) => {
 };
 
 const PSQLerrors = (err, req, res, next) => {
-  const errCodes = ['23503', '42703'];
+  const errCodes = ['23503', '42703', '42803'];
   if (errCodes.includes(err.code)) {
     res.status(400).send({ msg: 'Bad Request' });
   } else {
@@ -23,10 +23,14 @@ const internalErrorHandler = (err, req, res, next) => {
 const send404 = (req, res, next) => {
   res.status(404).send({ msg: 'invalid endpoint' });
 };
+const send405 = (req, res, next) => {
+  res.status(405).send({ msg: 'Method Not Allowed' });
+};
 
 module.exports = {
   internalErrorHandler,
   customErrorHandler,
   send404,
   PSQLerrors,
+  send405,
 };

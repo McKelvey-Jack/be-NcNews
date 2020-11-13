@@ -29,9 +29,7 @@ const fetchAllUsersWithArticleCount = (sortBy, order) => {
   return connection('users')
     .select('users.*')
     .leftJoin('articles', 'articles.author', '=', 'users.username')
-
     .count('articles.author AS articles_count')
-
     .returning('*')
     .groupBy('users.username')
     .orderBy(sortBy || 'username', order || 'asc')
