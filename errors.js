@@ -7,7 +7,9 @@ const customErrorHandler = (err, req, res, next) => {
 };
 
 const PSQLerrors = (err, req, res, next) => {
-  const errCodes = ['23503', '42703', '42803'];
+  console.log(err);
+
+  const errCodes = ['23503', '42703', '42803', '22P02'];
   if (errCodes.includes(err.code)) {
     res.status(400).send({ msg: 'Bad Request' });
   } else {
