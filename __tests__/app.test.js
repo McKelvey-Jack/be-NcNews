@@ -20,6 +20,17 @@ describe('API', () => {
       });
   });
 
+  describe.only('/API', () => {
+    test('GET - will return a JSON object of all availavle endpoints', () => {
+      return request(app)
+        .get('/api')
+        .expect(200)
+        .then((res) => {
+          expect(res.body).toHaveProperty('endpoints');
+        });
+    });
+  });
+
   describe('API/TOPICS', () => {
     test('GET - 200 - will return all topics', () => {
       return request(app)

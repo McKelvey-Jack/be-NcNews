@@ -1,12 +1,5 @@
-<h1>Hello and welcome to the backend repo for NC news</h1>
-
-To run the project locally you will need to clone this repo and <strong>run npm Install</strong> or <strong>yarn install</strong> to install the dependencies.
-
-Once the dependencies are installed, you can use the script <strong>npm start</strong> to kickstart the server
-
-Below is a list of all available and some example responses.
-
-````endpoints: {
+const endpoints = {
+  endpoints: {
     'GET /api': {
       description:
         'serves up a json representation of all the available endpoints of the api',
@@ -228,5 +221,7 @@ Below is a list of all available and some example responses.
         deletedComment: 1,
       },
     },
-  },```
-````
+  },
+};
+
+module.exports = endpoints;
